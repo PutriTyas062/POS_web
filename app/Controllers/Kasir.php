@@ -91,8 +91,21 @@ class Kasir extends BaseController
 
     public function checkout()
     {
-        $cart = session()->get('cart') ?? [];
-        
+        $cartPayload = $this->request->getPost('cart');
+        $cart = [];
+
+        if (!empty($cartPayload)) {
+            $decodedCart = json_decode($cartPayload, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decodedCart)) {
+                $cart = $decodedCart;
+            }
+        }
+
+        if (empty($cart)) {
+            $cart = session()->get('cart') ?? [];
+        }
+
         if (empty($cart)) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Keranjang kosong']);
         }
@@ -139,6 +152,10 @@ class Kasir extends BaseController
 
         $transaction_id = $this->transactionModel->insert($transactionData);
 
+        if (!$transaction_id) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Transaksi gagal disimpan']);
+        }
+
         // Save transaction details
         foreach ($cart as $item) {
             $detailData = [
@@ -161,6 +178,11 @@ class Kasir extends BaseController
             'status' => 'success',
             'transaction_id' => $transaction_id,
             'transaction_code' => $transaction_code,
+            'total_payment' => $total_payment,
+            'subtotal' => $subtotal,
+            'ppn_value' => $ppn_value,
+            'cash_received' => $cash_received,
+            'cash_return' => $cash_return,
         ]);
     }
 

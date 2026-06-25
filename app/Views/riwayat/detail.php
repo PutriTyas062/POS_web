@@ -2,6 +2,33 @@
 
 <?= $this->section('content'); ?>
 
+<style>
+    @media print {
+        .sidebar,
+        .top-header,
+        .btn,
+        .card-header a {
+            display: none !important;
+        }
+
+        .main-content,
+        .content-area {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .card {
+            box-shadow: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        body {
+            background: #fff !important;
+        }
+    }
+</style>
+
 <div class="card">
     <div class="card-header">
         <h2>Detail Transaksi: <?= $transaction['transaction_code']; ?></h2>
@@ -53,5 +80,13 @@
         <?php endif; ?>
     </div>
 </div>
+
+<?php if (isset($_GET['print']) && $_GET['print'] === '1'): ?>
+<script>
+    window.addEventListener('load', function() {
+        window.print();
+    });
+</script>
+<?php endif; ?>
 
 <?= $this->endSection(); ?>

@@ -1,134 +1,148 @@
 -- POS System Database Setup Script
--- Run this file in phpMyAdmin or MySQL CLI after creating the database
+-- Import this file into phpMyAdmin to recreate the database from scratch.
 
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP DATABASE IF EXISTS pos_system;
+CREATE DATABASE pos_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE pos_system;
 
 -- =====================
 -- TABLE: users
 -- =====================
-CREATE TABLE IF NOT EXISTS users (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL UNIQUE,
+CREATE TABLE users (
+    id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(150) NOT NULL,
-    role ENUM('admin', 'kasir') DEFAULT 'kasir',
-    status ENUM('active', 'inactive') DEFAULT 'active',
-    created_at DATETIME,
-    updated_at DATETIME,
-    INDEX idx_username (username),
-    INDEX idx_role (role)
+    role ENUM('admin', 'kasir') NOT NULL DEFAULT 'kasir',
+    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+    created_at DATETIME NULL,
+    updated_at DATETIME NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY users_username_unique (username),
+    UNIQUE KEY users_email_unique (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================
 -- TABLE: products
 -- =====================
-CREATE TABLE IF NOT EXISTS products (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    product_code VARCHAR(50) NOT NULL UNIQUE,
+CREATE TABLE products (
+    id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+    product_code VARCHAR(50) NOT NULL,
     product_name VARCHAR(150) NOT NULL,
-    category ENUM('Makanan', 'Minuman', 'Lainnya'),
-    unit ENUM('Buah', 'Cup', 'Pcs', 'Dus', 'Botol') DEFAULT 'Pcs',
-    purchase_price INT,
-    selling_price INT,
-    stock INT DEFAULT 0,
-    min_stock INT DEFAULT 5,
-    image VARCHAR(255),
-    status ENUM('AKTIF', 'NONAKTIF') DEFAULT 'AKTIF',
-    created_at DATETIME,
-    updated_at DATETIME,
-    INDEX idx_category (category),
-    INDEX idx_status (status),
-    INDEX idx_product_code (product_code)
+    category ENUM('Makanan', 'Minuman', 'Lainnya') NOT NULL,
+    unit ENUM('Buah', 'Cup', 'Pcs', 'Dus', 'Botol') NOT NULL DEFAULT 'Pcs',
+    purchase_price INT(11) NOT NULL,
+    selling_price INT(11) NOT NULL,
+    stock INT(11) NOT NULL DEFAULT 0,
+    min_stock INT(11) NOT NULL DEFAULT 5,
+    image VARCHAR(255) NULL,
+    status ENUM('AKTIF', 'NONAKTIF') NOT NULL DEFAULT 'AKTIF',
+    created_at DATETIME NULL,
+    updated_at DATETIME NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY products_product_code_unique (product_code),
+    KEY products_category_index (category),
+    KEY products_status_index (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================
 -- TABLE: transactions
 -- =====================
-CREATE TABLE IF NOT EXISTS transactions (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    transaction_code VARCHAR(50) NOT NULL UNIQUE,
+CREATE TABLE transactions (
+    id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+    transaction_code VARCHAR(50) NOT NULL,
     tanggal_jam DATETIME NOT NULL,
-    user_id INT UNSIGNED NOT NULL,
-    total_item INT,
-    subtotal INT,
-    discount_type ENUM('Tunas', 'QRIS', 'Debit') DEFAULT 'Tunas',
-    discount_value INT DEFAULT 0,
-    ppn_percent DECIMAL(5, 2) DEFAULT 11,
-    ppn_value INT DEFAULT 0,
-    total_payment INT,
-    cash_received INT DEFAULT 0,
-    cash_return INT DEFAULT 0,
-    payment_status ENUM('Tunai', 'QRIS', 'Debit'),
-    notes TEXT,
-    created_at DATETIME,
-    updated_at DATETIME,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_transaction_code (transaction_code),
-    INDEX idx_tanggal_jam (tanggal_jam),
-    INDEX idx_user_id (user_id)
+    user_id INT(11) UNSIGNED NOT NULL,
+    total_item INT(11) NOT NULL,
+    subtotal INT(11) NOT NULL,
+    discount_type ENUM('Tunas', 'QRIS', 'Debit') NOT NULL DEFAULT 'Tunas',
+    discount_value INT(11) NOT NULL DEFAULT 0,
+    ppn_percent DECIMAL(5,2) NOT NULL DEFAULT 11.00,
+    ppn_value INT(11) NOT NULL DEFAULT 0,
+    total_payment INT(11) NOT NULL,
+    cash_received INT(11) NOT NULL DEFAULT 0,
+    cash_return INT(11) NOT NULL DEFAULT 0,
+    payment_status ENUM('Tunai', 'QRIS', 'Debit') NOT NULL,
+    notes TEXT NULL,
+    created_at DATETIME NULL,
+    updated_at DATETIME NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY transactions_transaction_code_unique (transaction_code),
+    KEY transactions_tanggal_jam_index (tanggal_jam),
+    KEY transactions_user_id_index (user_id),
+    CONSTRAINT transactions_user_id_foreign
+        FOREIGN KEY (user_id) REFERENCES users (id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================
 -- TABLE: transaction_details
 -- =====================
-CREATE TABLE IF NOT EXISTS transaction_details (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    transaction_id INT UNSIGNED NOT NULL,
-    product_id INT UNSIGNED NOT NULL,
-    quantity INT,
-    unit_price INT,
-    subtotal INT,
-    created_at DATETIME,
-    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    INDEX idx_transaction_id (transaction_id),
-    INDEX idx_product_id (product_id)
+CREATE TABLE transaction_details (
+    id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+    transaction_id INT(11) UNSIGNED NOT NULL,
+    product_id INT(11) UNSIGNED NOT NULL,
+    quantity INT(11) NOT NULL,
+    unit_price INT(11) NOT NULL,
+    subtotal INT(11) NOT NULL,
+    created_at DATETIME NULL,
+    PRIMARY KEY (id),
+    KEY transaction_details_transaction_id_index (transaction_id),
+    KEY transaction_details_product_id_index (product_id),
+    CONSTRAINT transaction_details_transaction_id_foreign
+        FOREIGN KEY (transaction_id) REFERENCES transactions (id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT transaction_details_product_id_foreign
+        FOREIGN KEY (product_id) REFERENCES products (id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================
 -- TABLE: expenses
 -- =====================
-CREATE TABLE IF NOT EXISTS expenses (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE expenses (
+    id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
     tanggal DATETIME NOT NULL,
-    category ENUM('Listrik', 'Gas', 'Pembaharuan', 'Sewa', 'Lainnya'),
-    deskripsi TEXT,
-    nominal INT,
-    pengguna VARCHAR(150),
-    lampiran VARCHAR(255),
-    created_at DATETIME,
-    updated_at DATETIME,
-    INDEX idx_tanggal (tanggal),
-    INDEX idx_category (category)
+    category ENUM('Listrik', 'Gas', 'Pembaharuan', 'Sewa', 'Lainnya') NOT NULL,
+    deskripsi TEXT NULL,
+    nominal INT(11) NOT NULL,
+    pengguna VARCHAR(150) NOT NULL,
+    lampiran VARCHAR(255) NULL,
+    created_at DATETIME NULL,
+    updated_at DATETIME NULL,
+    PRIMARY KEY (id),
+    KEY expenses_tanggal_index (tanggal),
+    KEY expenses_category_index (category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================
--- MIGRATION TRACKING TABLE (untuk CodeIgniter)
+-- TABLE: migrations
 -- =====================
-CREATE TABLE IF NOT EXISTS migrations (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    version BIGINT UNSIGNED NOT NULL,
+CREATE TABLE migrations (
+    id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    version BIGINT(20) UNSIGNED NOT NULL,
     class VARCHAR(255) NOT NULL,
-    group VARCHAR(255) NOT NULL,
+    `group` VARCHAR(255) NOT NULL,
     namespace VARCHAR(255) NOT NULL,
-    time BIGINT NOT NULL,
-    batch INT UNSIGNED NOT NULL
+    time BIGINT(20) NOT NULL,
+    batch INT(11) UNSIGNED NOT NULL,
+    PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================
--- INSERT INITIAL DATA (Sample Users & Products)
+-- SAMPLE DATA
 -- =====================
+INSERT INTO users (username, email, password, full_name, role, status, created_at, updated_at) VALUES
+('admin', 'admin@pos.local', '$2y$10$63B.6qIqntWX5Kr9uuc5zec3XTuCZ4joHztSXoPpt2I7L0umEF59.', 'Administrator', 'admin', 'active', NOW(), NOW()),
+('kasir', 'kasir@pos.local', '$2y$10$1Yi2jrxEc6/xaVh17sTRBOICRcqSjp0PCqXBA4QLSVEwz1yETxuA6', 'Kasir 1', 'kasir', 'active', NOW(), NOW());
 
--- Insert Admin User
-INSERT INTO users (username, email, password, full_name, role, status, created_at, updated_at) 
-VALUES ('admin', 'admin@pos.local', '$2y$10$rUOVxJU5WdvXdhEKhRNvXOwBH4Zc2cXhjQJ0K3jLlLyYptGxFakpW', 'Administrator', 'admin', 'active', NOW(), NOW());
-
--- Insert Kasir User (Password: kasir123)
-INSERT INTO users (username, email, password, full_name, role, status, created_at, updated_at) 
-VALUES ('kasir', 'kasir@pos.local', '$2y$10$nRZNGKk6u4YMI8cLb5J/L.HyN5uIRYIWQ7Lr6n5lLmDvWzF1v8Rne', 'Kasir 1', 'kasir', 'active', NOW(), NOW());
-
--- Insert Sample Products
 INSERT INTO products (product_code, product_name, category, unit, purchase_price, selling_price, stock, min_stock, status, created_at, updated_at) VALUES
 ('PRD-001', 'Pempek', 'Makanan', 'Pcs', 8000, 12000, 50, 5, 'AKTIF', NOW(), NOW()),
 ('PRD-002', 'Cireng Isi', 'Makanan', 'Pcs', 10000, 18000, 40, 5, 'AKTIF', NOW(), NOW()),
@@ -139,11 +153,8 @@ INSERT INTO products (product_code, product_name, category, unit, purchase_price
 ('PRD-007', 'Es Nutrisi', 'Minuman', 'Cup', 4000, 8000, 60, 5, 'AKTIF', NOW(), NOW()),
 ('PRD-008', 'Air Mineral 600ml', 'Minuman', 'Botol', 3000, 5000, 120, 10, 'AKTIF', NOW(), NOW());
 
--- =====================
--- NOTES
--- =====================
--- Admin Password: admin123
--- Kasir Password: kasir123
--- 
--- Passwords are hashed using PHP's password_hash() function with PASSWORD_DEFAULT algorithm
--- To verify: password_verify('plaintext', '$2y$10$...')
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Login default:
+-- Admin: admin / admin123
+-- Kasir: kasir / kasir123

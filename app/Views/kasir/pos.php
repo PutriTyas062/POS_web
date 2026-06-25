@@ -561,10 +561,12 @@
             const result = await response.json();
 
             if (result.status === 'success') {
-                alert('Transaksi berhasil! Kode Transaksi: ' + result.transaction_code);
                 cartData = {};
                 updateCart();
                 closeCheckoutModal();
+                window.location.href = '/riwayat/detail/' + result.transaction_id + '?print=1';
+            } else {
+                alert(result.message || 'Transaksi gagal disimpan');
             }
         } catch (error) {
             console.error('Error:', error);
